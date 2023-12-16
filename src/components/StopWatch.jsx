@@ -1,69 +1,56 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import DialogModal from "./DialogModal"
+import { formatTime } from "../util/StopWatch"
 
 export default function StopWatch({ targetTime }) {
 
-    const [stopWatchTime, setStopWatchTime] = useState(0)
-
-    const [isTimeRunning, setIsTimeRunning] = useState(false)
-
+    const [stopWatchTimer, setStopWatchTimer] = useState(0)
+    const [stopWatchStarted, setStopWatchStarted] = useState(false)
+    const [stopWatchEnded, setStopWatchEnded] = useState(false)
+    const dialogRef = useRef()
 
     useEffect(() => {
-        let interval = null
+        let intervalId = null
 
-        if (isTimeRunning) {
-            interval = setInterval(() => {
-                setStopWatchTime((prevTime) => prevTime + 10)
+        if (stopWatchStarted && !(stopWatchTimer >= targetTime * 1000) && !stopWatchEnded) {
+            intervalId = setInterval(() => {
+                setStopWatchTimer(prevTime => prevTime + 10)
             }, 10)
         } else {
-            clearInterval(interval)
+            clearInterval(intervalId)
         }
 
-        // Additional check to stop the timer when it reaches or exceeds the target time
-        if (stopWatchTime >= targetTime * 1000) {
-            setIsTimeRunning(false);
-            clearInterval(interval);
+
+        if (stopWatchTimer >= targetTime * 1000 || stopWatchEnded) {
+            dialogRef.current.open()
         }
 
-        return () => {
-            clearInterval(interval)
-        }
-    }, [isTimeRunning, stopWatchTime])
 
-    const formatTime = () => {
-        let minutes = `${Math.floor(stopWatchTime / 60000) % 60}`.slice(-2)
-        let seconds = `${Math.floor((stopWatchTime / 1000) % 60)}`.slice(-2)
-        let milliseconds = `${(stopWatchTime % 1000)}`.slice(-3)
+        return () => clearInterval(intervalId)
 
-        return `${addZeros(minutes)}:${addZeros(seconds)}.${addZeros(milliseconds, true)} `
+    }, [stopWatchTimer, stopWatchStarted])
+
+    const startTimer = () => {
+        setStopWatchStarted(true)
     }
 
-    const addZeros = (timeUnit, millis = false) => {
-        let updatedTimeUnit = timeUnit
-        if (millis) {
-            updatedTimeUnit = timeUnit < 10 ? `00${timeUnit}` : timeUnit < 100 ? `0${timeUnit}` : timeUnit
-        } else if (timeUnit < 10) {
-            updatedTimeUnit = '0' + timeUnit
-        }
-        return updatedTimeUnit
+    const stopTimer = () => {
+        setStopWatchEnded(true)
+    }
+
+    const resetTimer = () => {
+        setStopWatchTimer(0)
+        setStopWatchStarted(false)
+        setStopWatchEnded(false)
     }
 
     return (
         <>
-            <button onClick={() => setIsTimeRunning(prevTimeValue => !prevTimeValue)} className="bg-black text-white px-6 py-2 rounded font-medium mb-8">{isTimeRunning ? 'Stop' : 'Start'}</button>
-            <p className={`text-black text-xl font-semibold ${stopWatchTime >= targetTime * 1000 && 'animate-blink'}`} >
-                {formatTime()}
+            <DialogModal targetTime={targetTime} resetStopWatchTimer={resetTimer} stopWatchTimer={stopWatchTimer} ref={dialogRef} />
+            <button onClick={stopWatchStarted ? stopTimer : startTimer} className="bg-black  text-white px-6 py-2 rounded font-medium mb-8">{!stopWatchStarted ? 'Start' : 'Stop'}</button>
+            <p className={`text-black text-xl font-semibold ${stopWatchTimer >= targetTime * 1000 && 'animate-blink'}`} >
+                {formatTime(stopWatchTimer)}
             </p>
         </>
     )
 }
-
-
-// const formatTime = () => {
-//     const seconds = Math.floor(time / 1000);
-//     const milliseconds = (time % 1000);
-
-//     const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
-//     const displayMilliseconds = milliseconds < 10 ? `00${milliseconds}` : milliseconds < 100 ? `0${milliseconds}` : milliseconds;
-
-//     return `${displaySeconds}.${displayMilliseconds}`;
-// };

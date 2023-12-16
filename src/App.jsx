@@ -17,18 +17,18 @@ function App() {
       <div className="flex w-full flex-wrap justify-evenly gap-y-20 gap-x-8 mt-12">
         <TimerChallenge
           title='Easy'
+          time={15}
+        />
+        <TimerChallenge
+          title='Medium'
           time={10}
         />
         <TimerChallenge
-          title='Easy'
-          time={6}
+          title='Hard'
+          time={3}
         />
         <TimerChallenge
-          title='Easy'
-          time={2}
-        />
-        <TimerChallenge
-          title='Easy'
+          title='Extreme'
           time={1}
         />
       </div>
